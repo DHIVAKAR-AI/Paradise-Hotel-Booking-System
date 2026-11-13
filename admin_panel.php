@@ -1166,7 +1166,7 @@ if (isset($_SESSION['admin']) && (isset($_GET['checkout_id']) || isset($_GET['de
                         </thead>
                         <tbody>
                         <?php
-                        $reservations_q = mysqli_query($conn, "SELECT r.id, r.check_in, r.check_out, r.total, u.name as customer_name, ro.room_number 
+                        $reservations_q = mysqli_query($conn, "SELECT r.id, r.check_in, r.check_out, r.total, u.name as customer_name, ro.room_number, ro.price 
                             FROM reservations r
                             JOIN users u ON u.id = r.user_id
                             JOIN rooms ro ON ro.id = r.room_id
@@ -1184,12 +1184,21 @@ if (isset($_SESSION['admin']) && (isset($_GET['checkout_id']) || isset($_GET['de
                                 }
                                 $days_lbl = $days === 1 ? "1 night" : "{$days} nights";
                                 $formatted_tot = number_format($row['total'], 2);
-                                echo "<tr class='booking-row' data-search='" . strtolower("{$row['customer_name']} {$row['room_number']}") . "'>
+                                $is_ac = floatval($row['price']) >= 1500;
+                                $room_type_label = $is_ac ? 'AC' : 'Non-AC';
+                                $badge_class = $is_ac ? 'badge-ac' : 'badge-nonac';
+
+                                echo "<tr class='booking-row' data-search='" . strtolower("{$row['customer_name']} {$row['room_number']} {$room_type_label}") . "'>
                                     <td>
                                         <div class='fw-semibold'>{$row['customer_name']}</div>
                                         <small class='text-muted'>Res #{$row['id']} &bull; ₹{$formatted_tot} ({$days_lbl})</small>
                                     </td>
-                                    <td><strong>Room {$row['room_number']}</strong></td>
+                                    <td>
+                                        <div class='d-flex align-items-center gap-2'>
+                                            <strong>Room {$row['room_number']}</strong>
+                                            <span class='badge {$badge_class} rounded-pill px-2 py-0.5' style='font-size: 0.72rem; letter-spacing: 0.3px;'>{$room_type_label}</span>
+                                        </div>
+                                    </td>
                                     <td>{$cin}</td>
                                     <td>{$cout}</td>
                                     <td>

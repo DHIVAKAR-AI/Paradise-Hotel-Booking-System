@@ -709,7 +709,7 @@ if ($isLoggedIn && isset($_POST['payment_mode']) && isset($_POST['reservation_id
                     <tbody>
                     <?php
                     $user_id = $_SESSION['customer']['id'];
-                    $res_query = mysqli_query($conn, "SELECT r.room_number, res.* FROM reservations res 
+                    $res_query = mysqli_query($conn, "SELECT r.room_number, r.price, res.* FROM reservations res 
                                                 JOIN rooms r ON res.room_id = r.id 
                                                 WHERE res.user_id = $user_id ORDER BY res.id DESC");
 
@@ -729,9 +729,17 @@ if ($isLoggedIn && isset($_POST['payment_mode']) && isset($_POST['reservation_id
                             }
                             $nights_text = $days === 1 ? "1 night" : "{$days} nights";
                             $formatted_total = "₹" . number_format($row['total'], 2);
+                            $is_ac = floatval($row['price']) >= 1500;
+                            $room_type_label = $is_ac ? 'AC' : 'Non-AC';
+                            $badge_class = $is_ac ? 'badge-ac' : 'badge-nonac';
 
                             echo "<tr>
-                                <td><strong>{$row['room_number']}</strong></td>
+                                <td>
+                                    <div class='d-flex align-items-center gap-2'>
+                                        <strong>{$row['room_number']}</strong>
+                                        <span class='badge {$badge_class} rounded-pill px-2 py-0.5' style='font-size: 0.72rem; letter-spacing: 0.3px;'>{$room_type_label}</span>
+                                    </div>
+                                </td>
                                 <td>{$cin}</td>
                                 <td>{$cout}</td>
                                 <td>
