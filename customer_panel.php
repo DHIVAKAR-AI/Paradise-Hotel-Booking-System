@@ -64,14 +64,25 @@ if ($isLoggedIn && isset($_POST['book'])) {
     $in = mysqli_real_escape_string($conn, $_POST['check_in']);
     $out = mysqli_real_escape_string($conn, $_POST['check_out']);
     
+    // Calculate stay duration (number of nights / days)
+    $cin_time = strtotime($in);
+    $cout_time = strtotime($out);
+    $days = 1;
+    if ($cin_time && $cout_time) {
+        $days = max(1, (int)round(($cout_time - $cin_time) / 86400));
+    }
+    
     $room = mysqli_fetch_assoc(mysqli_query($conn, "SELECT room_number, price FROM rooms WHERE id=$room_id AND status='available'"));
     if ($room) {
-        $total = $room['price'];
+        $night_rate = floatval($room['price']);
+        $total = $night_rate * $days;
+        $nights_label = $days === 1 ? "1 night" : "{$days} nights";
+
         mysqli_query($conn, "INSERT INTO reservations (user_id, room_id, check_in, check_out, total) 
                    VALUES ($user_id, $room_id, '$in', '$out', $total)");
         mysqli_query($conn, "UPDATE rooms SET status='booked' WHERE id=$room_id");
         $alert_message = "<div class='alert alert-success alert-dismissible fade show border-0' role='alert'>
-            <i class='bi bi-check-circle-fill me-2'></i> Room <strong>{$room['room_number']}</strong> booked successfully! Total: <strong>₹" . number_format($total, 2) . "</strong>. Complete payment below to confirm your stay.
+            <i class='bi bi-check-circle-fill me-2'></i> Room <strong>{$room['room_number']}</strong> booked successfully! <strong>{$nights_label}</strong> &times; ₹" . number_format($night_rate, 2) . "/night = Total: <strong>₹" . number_format($total, 2) . "</strong>. Complete payment below to confirm your stay.
             <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
         </div>";
     } else {
@@ -627,14 +638,14 @@ if ($isLoggedIn && isset($_POST['payment_mode']) && isset($_POST['reservation_id
                     <!-- Room Category Dropdown -->
                     <div class="col-lg-4 col-md-12">
                         <label class="form-label-custom">Room Category</label>
-                        <select name="room_id" class="form-select-custom" required>
+                        <select name="room_id" id="customerRoomSelect" class="form-select-custom" required>
                             <option value="">Select Category ▾</option>
                             <?php
                             $rooms = mysqli_query($conn, "SELECT * FROM rooms WHERE status='available' ORDER BY CAST(room_number AS UNSIGNED) ASC");
                             while ($room = mysqli_fetch_assoc($rooms)) {
                                 $is_ac = floatval($room['price']) >= 1500;
                                 $category_name = $is_ac ? 'Deluxe AC' : 'Standard Non-AC';
-                                echo "<option value='{$room['id']}'>Room {$room['room_number']} — {$category_name} (₹{$room['price']})</option>";
+                                echo "<option value='{$room['id']}' data-price='{$room['price']}' data-room='{$room['room_number']}'>Room {$room['room_number']} — {$category_name} (₹" . number_format($room['price'], 2) . "/night)</option>";
                             }
                             ?>
                         </select>
@@ -650,6 +661,21 @@ if ($isLoggedIn && isset($_POST['payment_mode']) && isset($_POST['reservation_id
                     <div class="col-lg-4 col-md-6">
                         <label class="form-label-custom">Check-Out</label>
                         <input type="date" name="check_out" id="customerCheckOut" class="form-input-custom" required>
+                    </div>
+                </div>
+
+                <!-- Live Price Calculation Summary -->
+                <div id="bookingSummaryBox" class="p-3 mb-4 rounded-3 d-none" style="background: rgba(212, 175, 55, 0.08); border: 1px dashed rgba(212, 175, 55, 0.4);">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="text-muted small">Stay Duration:</span>
+                            <strong id="summaryDays" class="ms-1" style="color: var(--text-primary);">1 night</strong>
+                            <span class="text-muted small ms-2">(Rate: <span id="summaryRate">₹0.00</span>/night)</span>
+                        </div>
+                        <div class="fs-5">
+                            <span class="text-muted small">Total Amount:</span>
+                            <strong id="summaryTotal" class="text-warning ms-1">₹0.00</strong>
+                        </div>
                     </div>
                 </div>
 
@@ -695,13 +721,23 @@ if ($isLoggedIn && isset($_POST['payment_mode']) && isset($_POST['reservation_id
 
                             $cin = date("d-M-Y", strtotime($row['check_in']));
                             $cout = date("d-M-Y", strtotime($row['check_out']));
+                            $cin_time = strtotime($row['check_in']);
+                            $cout_time = strtotime($row['check_out']);
+                            $days = 1;
+                            if ($cin_time && $cout_time) {
+                                $days = max(1, (int)round(($cout_time - $cin_time) / 86400));
+                            }
+                            $nights_text = $days === 1 ? "1 night" : "{$days} nights";
                             $formatted_total = "₹" . number_format($row['total'], 2);
 
                             echo "<tr>
                                 <td><strong>{$row['room_number']}</strong></td>
                                 <td>{$cin}</td>
                                 <td>{$cout}</td>
-                                <td class='fw-bold text-warning'>{$formatted_total}</td>
+                                <td>
+                                    <div class='fw-bold text-warning'>{$formatted_total}</div>
+                                    <small class='text-muted'>{$nights_text}</small>
+                                </td>
                                 <td>";
                             
                             if ($paid) {
@@ -987,19 +1023,48 @@ if ($isLoggedIn && isset($_POST['payment_mode']) && isset($_POST['reservation_id
             if (mode === 'cash' && cashBox) cashBox.classList.remove('d-none');
         }
 
-        // Default Dates Setup
+        // Default Dates Setup & Live Price Calculation
         document.addEventListener('DOMContentLoaded', function () {
             const inDate = document.getElementById('customerCheckIn');
             const outDate = document.getElementById('customerCheckOut');
+            const roomSelect = document.getElementById('customerRoomSelect');
+            const summaryBox = document.getElementById('bookingSummaryBox');
+            const summaryDays = document.getElementById('summaryDays');
+            const summaryRate = document.getElementById('summaryRate');
+            const summaryTotal = document.getElementById('summaryTotal');
+
+            function updateLiveEstimate() {
+                if (!inDate || !outDate || !roomSelect || !summaryBox) return;
+
+                const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+                const price = parseFloat(selectedOption?.dataset?.price || 0);
+
+                if (!inDate.value || !outDate.value || !price) {
+                    summaryBox.classList.add('d-none');
+                    return;
+                }
+
+                const inTime = new Date(inDate.value).getTime();
+                const outTime = new Date(outDate.value).getTime();
+                let days = Math.round((outTime - inTime) / (1000 * 60 * 60 * 24));
+                if (isNaN(days) || days <= 0) days = 1;
+
+                const total = price * days;
+                if (summaryDays) summaryDays.textContent = days === 1 ? '1 night' : days + ' nights';
+                if (summaryRate) summaryRate.textContent = '₹' + price.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                if (summaryTotal) summaryTotal.textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                summaryBox.classList.remove('d-none');
+            }
+
             if (inDate && outDate) {
                 const today = new Date().toISOString().split('T')[0];
                 inDate.min = today;
-                inDate.value = today;
+                if (!inDate.value) inDate.value = today;
 
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 outDate.min = today;
-                outDate.value = tomorrow.toISOString().split('T')[0];
+                if (!outDate.value) outDate.value = tomorrow.toISOString().split('T')[0];
 
                 inDate.addEventListener('change', function () {
                     if (inDate.value) {
@@ -1010,8 +1075,17 @@ if ($isLoggedIn && isset($_POST['payment_mode']) && isset($_POST['reservation_id
                             outDate.value = next.toISOString().split('T')[0];
                         }
                     }
+                    updateLiveEstimate();
                 });
+
+                outDate.addEventListener('change', updateLiveEstimate);
             }
+
+            if (roomSelect) {
+                roomSelect.addEventListener('change', updateLiveEstimate);
+            }
+
+            updateLiveEstimate();
         });
     </script>
 </body>

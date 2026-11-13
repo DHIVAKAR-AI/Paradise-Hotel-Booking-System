@@ -47,7 +47,17 @@ if (isset($_SESSION['admin']) && isset($_POST['admin_book'])) {
     $room_q = mysqli_query($conn, "SELECT room_number, price FROM rooms WHERE id = $room_id AND status = 'available'");
     if ($room_q && mysqli_num_rows($room_q) > 0) {
         $room = mysqli_fetch_assoc($room_q);
-        $total = $room['price'];
+        
+        // Calculate stay duration (number of nights / days)
+        $cin_time = strtotime($check_in);
+        $cout_time = strtotime($check_out);
+        $days = 1;
+        if ($cin_time && $cout_time) {
+            $days = max(1, (int)round(($cout_time - $cin_time) / 86400));
+        }
+        $night_rate = floatval($room['price']);
+        $total = $night_rate * $days;
+        $nights_label = $days === 1 ? "1 night" : "{$days} nights";
 
         // Find or create customer account
         $clean_phone = preg_replace('/[^0-9]/', '', $phone);
@@ -80,7 +90,7 @@ if (isset($_SESSION['admin']) && isset($_POST['admin_book'])) {
         }
 
         $alert_message = "<div class='alert alert-success alert-dismissible fade show border-0' role='alert'>
-            <i class='bi bi-check-circle-fill me-2'></i> <strong>Success!</strong> Room {$room['room_number']} booked for {$customer_name} (Res #{$reservation_id}).
+            <i class='bi bi-check-circle-fill me-2'></i> <strong>Success!</strong> Room {$room['room_number']} booked for {$customer_name} ({$nights_label} &times; ₹" . number_format($night_rate, 2) . "/night = Total: <strong>₹" . number_format($total, 2) . "</strong>) (Res #{$reservation_id}).
             <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
         </div>";
     } else {
@@ -1166,10 +1176,18 @@ if (isset($_SESSION['admin']) && (isset($_GET['checkout_id']) || isset($_GET['de
                             while ($row = mysqli_fetch_assoc($reservations_q)) {
                                 $cin = date("d-M-y", strtotime($row['check_in']));
                                 $cout = date("d-M-y", strtotime($row['check_out']));
+                                $cin_time = strtotime($row['check_in']);
+                                $cout_time = strtotime($row['check_out']);
+                                $days = 1;
+                                if ($cin_time && $cout_time) {
+                                    $days = max(1, (int)round(($cout_time - $cin_time) / 86400));
+                                }
+                                $days_lbl = $days === 1 ? "1 night" : "{$days} nights";
+                                $formatted_tot = number_format($row['total'], 2);
                                 echo "<tr class='booking-row' data-search='" . strtolower("{$row['customer_name']} {$row['room_number']}") . "'>
                                     <td>
                                         <div class='fw-semibold'>{$row['customer_name']}</div>
-                                        <small class='text-muted'>Res #{$row['id']} &bull; ₹{$row['total']}</small>
+                                        <small class='text-muted'>Res #{$row['id']} &bull; ₹{$formatted_tot} ({$days_lbl})</small>
                                     </td>
                                     <td><strong>Room {$row['room_number']}</strong></td>
                                     <td>{$cin}</td>
@@ -1339,10 +1357,24 @@ if (isset($_SESSION['admin']) && (isset($_GET['checkout_id']) || isset($_GET['de
                             $rooms_dropdown = mysqli_query($conn, "SELECT * FROM rooms WHERE status='available' ORDER BY CAST(room_number AS UNSIGNED) ASC");
                             while ($r = mysqli_fetch_assoc($rooms_dropdown)) {
                                 $is_ac_opt = floatval($r['price']) >= 1500 ? 'AC' : 'Non-AC';
-                                echo "<option value='{$r['id']}'>Room {$r['room_number']} ({$is_ac_opt}) — ₹" . number_format($r['price']) . "/night</option>";
+                                echo "<option value='{$r['id']}' data-price='{$r['price']}'>Room {$r['room_number']} ({$is_ac_opt}) — ₹" . number_format($r['price']) . "/night</option>";
                             }
                             ?>
                         </select>
+                    </div>
+
+                    <!-- Live Price Calculation in Admin Modal -->
+                    <div id="adminBookingSummaryBox" class="p-3 mb-3 rounded-3 d-none" style="background: rgba(212, 175, 55, 0.08); border: 1px dashed rgba(212, 175, 55, 0.4);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="small text-muted">Duration:</span>
+                                <strong id="adminSummaryDays" class="ms-1" style="color: var(--text-primary);">1 night</strong>
+                            </div>
+                            <div>
+                                <span class="small text-muted">Total:</span>
+                                <strong id="adminSummaryTotal" class="text-warning ms-1 fs-6">₹0.00</strong>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Payment Status -->
@@ -1430,11 +1462,42 @@ if (isset($_SESSION['admin']) && (isset($_GET['checkout_id']) || isset($_GET['de
             if (select) {
                 select.value = roomId;
             }
+            updateAdminLiveEstimate();
             const modalEl = document.getElementById('adminBookingModal');
             if (modalEl) {
                 const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 modal.show();
             }
+        }
+
+        // Live calculation for Admin booking modal
+        function updateAdminLiveEstimate() {
+            const inDate = document.getElementById('adminCheckIn');
+            const outDate = document.getElementById('adminCheckOut');
+            const roomSelect = document.getElementById('adminRoomSelect');
+            const summaryBox = document.getElementById('adminBookingSummaryBox');
+            const summaryDays = document.getElementById('adminSummaryDays');
+            const summaryTotal = document.getElementById('adminSummaryTotal');
+
+            if (!inDate || !outDate || !roomSelect || !summaryBox) return;
+
+            const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+            const price = parseFloat(selectedOption?.dataset?.price || 0);
+
+            if (!inDate.value || !outDate.value || !price) {
+                summaryBox.classList.add('d-none');
+                return;
+            }
+
+            const inTime = new Date(inDate.value).getTime();
+            const outTime = new Date(outDate.value).getTime();
+            let days = Math.round((outTime - inTime) / (1000 * 60 * 60 * 24));
+            if (isNaN(days) || days <= 0) days = 1;
+
+            const total = price * days;
+            if (summaryDays) summaryDays.textContent = days === 1 ? '1 night' : days + ' nights';
+            if (summaryTotal) summaryTotal.textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            summaryBox.classList.remove('d-none');
         }
 
         // Room filter function: All / AC / Non-AC
@@ -1505,15 +1568,17 @@ if (isset($_SESSION['admin']) && (isset($_GET['checkout_id']) || isset($_GET['de
             // Set default date limits for Admin booking modal
             const inDate = document.getElementById('adminCheckIn');
             const outDate = document.getElementById('adminCheckOut');
+            const roomSelect = document.getElementById('adminRoomSelect');
+
             if (inDate && outDate) {
                 const today = new Date().toISOString().split('T')[0];
                 inDate.min = today;
-                inDate.value = today;
+                if (!inDate.value) inDate.value = today;
 
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 outDate.min = today;
-                outDate.value = tomorrow.toISOString().split('T')[0];
+                if (!outDate.value) outDate.value = tomorrow.toISOString().split('T')[0];
 
                 inDate.addEventListener('change', function () {
                     if (inDate.value) {
@@ -1524,8 +1589,17 @@ if (isset($_SESSION['admin']) && (isset($_GET['checkout_id']) || isset($_GET['de
                             outDate.value = next.toISOString().split('T')[0];
                         }
                     }
+                    updateAdminLiveEstimate();
                 });
+
+                outDate.addEventListener('change', updateAdminLiveEstimate);
             }
+
+            if (roomSelect) {
+                roomSelect.addEventListener('change', updateAdminLiveEstimate);
+            }
+
+            updateAdminLiveEstimate();
         });
     </script>
 </body>
