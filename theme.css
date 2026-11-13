@@ -1,0 +1,394 @@
+/* ==========================================================================
+   GLOBAL THEME STYLES (DARK / LIGHT MODE)
+   Hotel Paradise Reservation System
+   ========================================================================== */
+
+:root {
+    --gold: #d4af37;
+    --gold-hover: #f1c40f;
+    --gold-dark: #b8860b;
+    --transition-speed: 0.3s;
+}
+
+/* ==========================================
+   DARK MODE (Default Theme)
+   ========================================== */
+[data-theme="dark"] {
+    --theme-mode: dark;
+    --bg-primary: #0b0f19;
+    --bg-secondary: #111827;
+    --bg-card: rgba(18, 24, 40, 0.82);
+    --bg-card-hover: rgba(26, 35, 58, 0.9);
+    --bg-glass: rgba(10, 15, 30, 0.65);
+    --bg-input: rgba(15, 23, 42, 0.7);
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.12);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.6);
+    --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.3);
+    
+    --hero-overlay: linear-gradient(
+        180deg, 
+        rgba(10, 15, 30, 0.88) 0%, 
+        rgba(15, 23, 42, 0.65) 40%, 
+        rgba(10, 15, 30, 0.92) 100%
+    );
+    --lobby-overlay: linear-gradient(
+        135deg, 
+        rgba(10, 15, 30, 0.88) 0%, 
+        rgba(15, 23, 42, 0.8) 50%, 
+        rgba(10, 15, 30, 0.94) 100%
+    );
+    --explore-bg: radial-gradient(circle at 50% 20%, #17233f 0%, #0b0f19 75%);
+    --nav-bg: rgba(10, 15, 30, 0.55);
+    --table-header-bg: #1e293b;
+    --table-header-color: #ffffff;
+    --table-row-bg: rgba(255, 255, 255, 0.02);
+    --table-row-color: #ffffff;
+    --table-border: rgba(255, 255, 255, 0.1);
+    --modal-bg: #111827;
+    --modal-color: #ffffff;
+    --toggle-fab-bg: rgba(22, 30, 49, 0.9);
+    --toggle-fab-color: #ffffff;
+    --toggle-fab-border: rgba(212, 175, 55, 0.4);
+}
+
+/* ==========================================
+   LIGHT MODE
+   ========================================== */
+[data-theme="light"] {
+    --theme-mode: light;
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.94);
+    --bg-card-hover: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.88);
+    --bg-input: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: rgba(0, 0, 0, 0.12);
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --shadow-card: 0 15px 35px rgba(0, 0, 0, 0.08);
+    --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.05);
+    
+    --hero-overlay: linear-gradient(
+        180deg, 
+        rgba(255, 255, 255, 0.9) 0%, 
+        rgba(248, 250, 252, 0.78) 40%, 
+        rgba(255, 255, 255, 0.94) 100%
+    );
+    --lobby-overlay: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.94) 0%, 
+        rgba(241, 245, 249, 0.88) 50%, 
+        rgba(255, 255, 255, 0.96) 100%
+    );
+    --explore-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --nav-bg: rgba(255, 255, 255, 0.9);
+    --table-header-bg: #f1f5f9;
+    --table-header-color: #0f172a;
+    --table-row-bg: #ffffff;
+    --table-row-color: #0f172a;
+    --table-border: #e2e8f0;
+    --modal-bg: #ffffff;
+    --modal-color: #0f172a;
+    --toggle-fab-bg: #ffffff;
+    --toggle-fab-color: #0f172a;
+    --toggle-fab-border: rgba(212, 175, 55, 0.5);
+}
+
+/* ==========================================
+   GLOBAL TRANSITIONS
+   ========================================== */
+body, .top-navbar, .top-bar, .portal-card, .dashboard-container,
+.explore-card, .modal-content, .btn-nav-customer, .btn-nav-admin,
+.stat-card, .item-card, .input-group-custom, .theme-toggle-fab {
+    transition: background-color var(--transition-speed) ease,
+                background var(--transition-speed) ease,
+                color var(--transition-speed) ease,
+                border-color var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease;
+}
+
+/* ==========================================
+   FLOATING THEME TOGGLE FAB (All Pages)
+   ========================================== */
+.theme-toggle-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--toggle-fab-bg);
+    color: var(--toggle-fab-color);
+    border: 1.5px solid var(--toggle-fab-border);
+    border-radius: 50px;
+    padding: 0.65rem 1.15rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.theme-toggle-fab:hover {
+    transform: translateY(-3px) scale(1.05);
+    border-color: var(--gold);
+    box-shadow: 0 12px 30px rgba(212, 175, 55, 0.35);
+}
+
+.theme-toggle-fab:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.theme-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+
+/* Toggle icon display based on active theme */
+[data-theme="dark"] .icon-sun {
+    display: inline-block;
+    color: #f1c40f;
+}
+[data-theme="dark"] .icon-moon {
+    display: none;
+}
+
+[data-theme="light"] .icon-sun {
+    display: none;
+}
+[data-theme="light"] .icon-moon {
+    display: inline-block;
+    color: #3b82f6;
+}
+
+/* ==========================================
+   IN-NAVBAR THEME TOGGLE BUTTON (Optional)
+   ========================================== */
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: inherit;
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+[data-theme="light"] .theme-toggle-btn {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold-dark);
+}
+
+/* ==========================================
+   LIGHT THEME ADAPTATIONS ACROSS PAGES
+   ========================================== */
+[data-theme="light"] .hero-title {
+    background: linear-gradient(180deg, #0f172a 40%, #1e293b 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+}
+
+[data-theme="light"] .brand-logo {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .hero-subtitle {
+    color: #475569 !important;
+    text-shadow: none !important;
+}
+
+[data-theme="light"] .btn-nav-customer {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .btn-nav-customer:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .btn-nav-admin {
+    background: rgba(212, 175, 55, 0.15) !important;
+    color: #855d00 !important;
+    border: 1.5px solid var(--gold) !important;
+}
+
+[data-theme="light"] .btn-nav-admin:hover {
+    background: var(--gold) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .back-link {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .back-link:hover {
+    background: #f1f5f9 !important;
+    color: #000000 !important;
+}
+
+[data-theme="light"] .portal-card {
+    background: var(--bg-card) !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .portal-title {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .field-label {
+    color: #334155 !important;
+}
+
+[data-theme="light"] .input-group-custom {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .input-group-custom:focus-within {
+    background: #ffffff !important;
+    border-color: var(--gold) !important;
+}
+
+[data-theme="light"] .form-control-custom {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .options-row {
+    color: #475569 !important;
+}
+
+[data-theme="light"] .forgot-link {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .forgot-link:hover {
+    color: var(--gold-dark) !important;
+}
+
+[data-theme="light"] .restricted-notice {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .explore-card {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .card-title-custom {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .card-desc-custom {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .card-badge {
+    background: #f8fafc !important;
+    color: #855d00 !important;
+    border-color: rgba(212, 175, 55, 0.4) !important;
+}
+
+[data-theme="light"] .carousel-control-prev,
+[data-theme="light"] .carousel-control-next {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .carousel-control-prev .nav-icon,
+[data-theme="light"] .carousel-control-next .nav-icon {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .dot-indicator {
+    border-color: #94a3b8 !important;
+}
+
+[data-theme="light"] .dot-indicator.active {
+    background: var(--gold-dark) !important;
+    border-color: var(--gold-dark) !important;
+}
+
+[data-theme="light"] .modal-content-luxury {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .modal-header-luxury {
+    border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .amenity-item {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .amenity-item h6 {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .dashboard-container {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .dashboard-header {
+    border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .stat-card {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .item-card {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .item-card h6 {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .footer-accent {
+    color: #64748b !important;
+    border-top-color: rgba(0, 0, 0, 0.08) !important;
+}
+
