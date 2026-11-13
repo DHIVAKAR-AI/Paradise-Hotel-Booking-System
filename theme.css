@@ -105,7 +105,7 @@
    ========================================== */
 body, .top-navbar, .top-bar, .portal-card, .dashboard-container,
 .explore-card, .modal-content, .btn-nav-customer, .btn-nav-admin,
-.stat-card, .item-card, .input-group-custom, .theme-toggle-fab {
+.stat-card, .item-card, .input-group-custom {
     transition: background-color var(--transition-speed) ease,
                 background var(--transition-speed) ease,
                 color var(--transition-speed) ease,
@@ -113,39 +113,9 @@ body, .top-navbar, .top-bar, .portal-card, .dashboard-container,
                 box-shadow var(--transition-speed) ease;
 }
 
-/* ==========================================
-   FLOATING THEME TOGGLE FAB (All Pages)
-   ========================================== */
-.theme-toggle-fab {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--toggle-fab-bg);
-    color: var(--toggle-fab-color);
-    border: 1.5px solid var(--toggle-fab-border);
-    border-radius: 50px;
-    padding: 0.65rem 1.15rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.theme-toggle-fab:hover {
-    transform: translateY(-3px) scale(1.05);
-    border-color: var(--gold);
-    box-shadow: 0 12px 30px rgba(212, 175, 55, 0.35);
-}
-
-.theme-toggle-fab:active {
-    transform: translateY(-1px) scale(0.98);
+/* In-page navbar theme toggles */
+.theme-toggle-fab, #globalThemeToggle {
+    display: none !important;
 }
 
 .theme-icon-container {

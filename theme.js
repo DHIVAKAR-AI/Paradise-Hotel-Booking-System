@@ -5,25 +5,6 @@
 })();
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Inject floating theme switcher if not manually created
-    if (!document.getElementById('globalThemeToggle')) {
-        const toggleBtn = document.createElement('button');
-        toggleBtn.id = 'globalThemeToggle';
-        toggleBtn.className = 'theme-toggle-fab';
-        toggleBtn.setAttribute('type', 'button');
-        toggleBtn.setAttribute('aria-label', 'Toggle theme');
-        toggleBtn.setAttribute('title', 'Switch Theme (Dark / Light)');
-        toggleBtn.innerHTML = `
-            <span class="theme-icon-container">
-                <i class="bi bi-sun-fill icon-sun"></i>
-                <i class="bi bi-moon-stars-fill icon-moon"></i>
-            </span>
-            <span class="theme-text">Mode</span>
-        `;
-        document.body.appendChild(toggleBtn);
-        toggleBtn.addEventListener('click', toggleTheme);
-    }
-
     // Attach listener to any in-page theme toggle buttons
     document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
         btn.addEventListener('click', toggleTheme);
@@ -42,7 +23,7 @@ function toggleTheme() {
 
 function updateThemeUI(theme) {
     const isDark = theme === 'dark';
-    const allButtons = document.querySelectorAll('#globalThemeToggle, .theme-toggle-btn');
+    const allButtons = document.querySelectorAll('.theme-toggle-btn');
     
     allButtons.forEach(btn => {
         btn.setAttribute('aria-label', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
